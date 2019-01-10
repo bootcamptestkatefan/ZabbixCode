@@ -1,0 +1,28 @@
+<assembly>
+  <id>${build.type}</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <!-- velocity processed files -->
+    <fileSet>
+        <directory>target/config</directory>
+        <outputDirectory>.</outputDirectory>
+        <excludes>
+            <exclude>**/*.vpp</exclude>
+        </excludes>
+    </fileSet>
+
+    <!-- all other config files -->
+    <fileSet>
+        <directory>./../app/config</directory>
+        <outputDirectory>.</outputDirectory>
+        <excludes>
+            <exclude>**/*.vpp</exclude>
+        </excludes>
+    </fileSet>
+
+  </fileSets>
+</assembly>

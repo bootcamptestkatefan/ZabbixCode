@@ -1,0 +1,6 @@
+{
+    "zabbixServerUrl":"${zabbixServerUrl}",
+    "webHookPort":"${webHookPort}",
+    "zabbixAccount":"${zabbixAccount}",
+    "zabbixPassword":"${zabbixPassword}"
+}

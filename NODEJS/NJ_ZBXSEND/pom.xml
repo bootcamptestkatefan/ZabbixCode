@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>ZBXSEND</groupId>
+	<artifactId>NJ_ZBXSEND_app_and_config</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0.0</version>
+	<name>Zabbix Sender</name>
+
+	<parent>
+		<groupId>ZBXSEND</groupId>
+		<artifactId>ZBXSEND</artifactId>
+		<version>1.0.0</version>
+    </parent>
+	
+	<modules>
+		<module>build_app</module>
+		<module>build_config</module>
+	</modules>
+	
+	<properties>
+    <searchRepo>npm-local</searchRepo>
+	</properties>
+	
+	<build>
+		<plugins>
+			<plugin> 
+					<groupId>org.apache.maven.plugins</groupId>  
+					<artifactId>maven-deploy-plugin</artifactId>
+					<configuration> 
+					  <altDeploymentRepository>qadeploy::default::${repoHost}/${searchRepo}</altDeploymentRepository>  
+					</configuration> 
+			  </plugin> 
+		</plugins> 
+    </build> 
+</project>

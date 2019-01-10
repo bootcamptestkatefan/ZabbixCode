@@ -1,0 +1,20 @@
+<assembly>
+  <id>${build.type}</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <fileSets>
+    <!-- velocity processed files -->
+    <fileSet>
+        <directory>./../app</directory>
+        <outputDirectory>app</outputDirectory>
+        <excludes> 
+            <exclude>config/**</exclude>
+            <exclude>node_modules/**</exclude>
+        </excludes>
+    </fileSet>
+  </fileSets>
+  
+</assembly>

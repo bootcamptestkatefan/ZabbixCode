@@ -1,0 +1,6 @@
+{
+    "zabbixServerUrl":"192.168.13.128",
+    "webHookPort":"3435",
+    "zabbixAccount":"Admin",
+    "zabbixPassword":"zabbix"
+}
