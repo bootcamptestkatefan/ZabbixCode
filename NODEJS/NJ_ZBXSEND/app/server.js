@@ -10,7 +10,7 @@ var ZabbixSender = require('node-zabbix-sender');
 var config = require('./devconfig/zbxsend-config.json');
 
 const zabberServer = config.zabbixServerUrl;
-//const zabberServer = config.zabbixServerUrl;
+//const zabberServer = devconfig.zabbixServerUrl;
 const zabbixServerAPIUrl ='http://'+zabberServer+'/zabbix/api_jsonrpc.php';
 
  const zabbixAccount = config.zabbixAccount;
@@ -61,7 +61,44 @@ app.post('/azureMetricAlert',(req,res) => {
                             +host+":"+itemKey+".regexp(\\\[Deactivated\\\])}=0";
     const priority = 5-alertSeverity;
 
-    checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
+    //kate's amendment
+    checkAlertType(alertSchemaId);
+    //kate's amendment
+
+    // checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
+    //     if(!result){            
+    //         res.sendStatus(200);
+    //         //Delay 45 seconds if it is a new alert
+    //         timer(45000).then(_=>
+    //             sendZabbixItem(host,itemKey,alertMessage,function respose(result){
+    //             })
+    //         );
+    //     }else{
+    //         sendZabbixItem(host,itemKey,alertMessage,function respose(result){
+    //             res.json(result);
+    //         });
+    //     }
+    // });
+});
+
+const timer = ms => new Promise( res => setTimeout(res, ms));
+
+//kate's amendment
+function checkAlertType(alertSchemaId){
+    if (alertSchemaId == 'Microsoft.Insights/activityLogs'){
+        return handleResourceHealthAlert();
+    }
+    else if (alertSchemaId == 'AzureMonitorMetricAlert'){
+        return AzureMonitorMetricAlert();
+    }
+    else{
+        console.log('Error - Invalid Alert Type')
+        throw err;
+    }
+};
+
+function AzureMonitorMetricAlert(){
+checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
         if(!result){            
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
@@ -75,9 +112,8 @@ app.post('/azureMetricAlert',(req,res) => {
             });
         }
     });
-});
-
-const timer = ms => new Promise( res => setTimeout(res, ms));
+}
+//kate's amendment
 
 function checkZabbixItem(hostGroupName,host,itemName,itemKey,triggerExpression,triggerPriority,callback){
     userLogin(zabbixAccount,zabbixPassword,function(authToken){
