@@ -20,7 +20,7 @@ app.use(session({
     secret: 'Njp2TAc4gT'
 }));
 
-const zabbixServerAPIUrl = 'http://192.168.13.128/zabbix/api_jsonrpc.php';
+const zabbixServerAPIUrl = 'http://192.168.13.134/zabbix/api_jsonrpc.php';
 
 app.listen(3003);
 console.log('app listening on port 3003');

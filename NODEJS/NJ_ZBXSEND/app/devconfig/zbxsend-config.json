@@ -1,5 +1,5 @@
 {
-    "zabbixServerUrl":"192.168.13.128",
+    "zabbixServerUrl":"192.168.13.134",
     "webHookPort":"3435",
     "zabbixAccount":"Admin",
     "zabbixPassword":"zabbix"
