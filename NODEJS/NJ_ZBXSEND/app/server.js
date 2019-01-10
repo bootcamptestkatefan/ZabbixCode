@@ -6,11 +6,17 @@ var app = express();
 var crypto = require('crypto');
 var ZabbixSender = require('node-zabbix-sender');
 
+//var config = require('./config/zbxsend-config.json');
 var config = require('./devconfig/zbxsend-config.json');
+
 const zabberServer = config.zabbixServerUrl;
+//const zabberServer = config.zabbixServerUrl;
 const zabbixServerAPIUrl ='http://'+zabberServer+'/zabbix/api_jsonrpc.php';
-const zabbixAccount = config.zabbixAccount;
-const zabbixPassword = config.zabbixPassword
+
+ const zabbixAccount = config.zabbixAccount;
+//const zabbixAccount = devconfig.zabbixAccount;
+ const zabbixPassword = config.zabbixPassword
+//const zabbixPassword = devconfig.zabbixPassword
 
 app.listen(config.webHookPort,() => console.log('Webhook is listening on port '+config.webHookPort));
 
@@ -22,6 +28,13 @@ app.post('/azureMetricAlert',(req,res) => {
     var alertCondition = alertContext.condition||alertContext.Condition;
     alertCondition = alertCondition.AllOf||alertCondition.allOf;
     var alertId = alertContext.id||alertContext.Id;
+
+    var alertActivityLog = alertContext.activityLog||alertContext.activityLog;
+    var alertEventTimeStamp = alertActivityLog.eventTimestamp||alertActivityLog.eventTimestamp;
+    var alertLevel = alertActivityLog.level||alertActivityLog.level;
+    var resourceId = alertActivityLog.resourceId||alertActivityLog.resourceId;
+    var resourceGroupName = alertActivityLog.resourceGroupName||alertActivityLog.resourceGroupName;
+    var alertStatus = alertActivityLog.status||alertActivityLog.status;
 
     var resourceGroupName = alertContext.resourceGroupName||alertContext.ResourceGroupName;
     var resourceName = alertContext.resourceName||alertContext.ResourceName;
