@@ -1,26 +1,21 @@
 var request = require('request');
 var express = require('express');
-var app = express();
-//var app = express().use(express.json());
+var app = express().use(express.json());
+//var app = express();
 
 var crypto = require('crypto');
 var ZabbixSender = require('node-zabbix-sender');
 
-//var config = require('./config/zbxsend-config.json');
 var config = require('./devconfig/zbxsend-config.json');
-
 const zabberServer = config.zabbixServerUrl;
-//const zabberServer = devconfig.zabbixServerUrl;
 const zabbixServerAPIUrl ='http://'+zabberServer+'/zabbix/api_jsonrpc.php';
-
- const zabbixAccount = config.zabbixAccount;
-//const zabbixAccount = devconfig.zabbixAccount;
- const zabbixPassword = config.zabbixPassword
-//const zabbixPassword = devconfig.zabbixPassword
+const zabbixAccount = config.zabbixAccount;
+const zabbixPassword = config.zabbixPassword
 
 app.listen(config.webHookPort,() => console.log('Webhook is listening on port '+config.webHookPort));
 
 app.post('/azureMetricAlert',(req,res) => {
+    var alertSchemaId = req.body.schemaId;
     var alertData = req.body.data;
     var alertStatus = alertData.status||alertData.Status;
     var alertContext = alertData.context||alertData.Context;
@@ -29,12 +24,17 @@ app.post('/azureMetricAlert',(req,res) => {
     alertCondition = alertCondition.AllOf||alertCondition.allOf;
     var alertId = alertContext.id||alertContext.Id;
 
-    var alertActivityLog = alertContext.activityLog||alertContext.activityLog;
-    var alertEventTimeStamp = alertActivityLog.eventTimestamp||alertActivityLog.eventTimestamp;
-    var alertLevel = alertActivityLog.level||alertActivityLog.level;
-    var resourceId = alertActivityLog.resourceId||alertActivityLog.resourceId;
-    var resourceGroupName = alertActivityLog.resourceGroupName||alertActivityLog.resourceGroupName;
-    var alertStatus = alertActivityLog.status||alertActivityLog.status;
+    //var alertActivityLog = alertContext.activityLog||alertContext.activityLog;
+    //var alertEventTimeStamp = alertActivityLog.eventTimestamp||alertActivityLog.eventTimestamp;
+    //var alertLevel = alertActivityLog.level||alertActivityLog.level;
+    //var resourceId = alertActivityLog.resourceId||alertActivityLog.resourceId;
+    //var alertResourceGroupName = alertActivityLog.resourceGroupName||alertActivityLog.resourceGroupName;
+    //var alertStatus = alertActivityLog.status||alertActivityLog.status;
+
+    //var alertProperties = alertActivityLog.properties||alertActivityLog.properties;
+    //var currentHealthStatus = alertProperties.currentHealthStatus||alertProperties.currentHealthStatus;
+    //var previousHealthStatus = alertProperties.previousHealthStatus||alertProperties.previousHealthStatus;
+    //var resourceProviderName = alertActivityLog.resourceProviderName||alertActivityLog.resourceProviderName;
 
     var resourceGroupName = alertContext.resourceGroupName||alertContext.ResourceGroupName;
     var resourceName = alertContext.resourceName||alertContext.ResourceName;
@@ -61,44 +61,36 @@ app.post('/azureMetricAlert',(req,res) => {
                             +host+":"+itemKey+".regexp(\\\[Deactivated\\\])}=0";
     const priority = 5-alertSeverity;
 
-    //kate's amendment
+    //fantszching
     checkAlertType(alertSchemaId);
-    //kate's amendment
+    function checkAlertType(alertSchemaId){
+        if (alertSchemaId == 'Microsoft.Insights/activityLogs'){
+            return handleResourceHealthAlert();
+        }
+        else if (alertSchemaId == 'AzureMonitorMetricAlert'){
+            return checkZabbixItemMetric("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
+                if(!result){ //new trigger can be made            
+                    res.sendStatus(200);
+                    //Delay 45 seconds if it is a new alert
+                    timer(45000).then(_=>
+                        sendZabbixItem(host,itemKey,alertMessage,function respose(result){
+                    })
+                    );
+                }else{ //new trigger cannot be made
+                    sendZabbixItem(host,itemKey,alertMessage,function respose(result){
+                        res.json(result);
+                    });                                
+                }
+            });
+        }
+        else{
+            console.log('Error - Invalid Alert Type')
+            throw err;
+        }
+    };
+    //fantszching
 
-    // checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
-    //     if(!result){            
-    //         res.sendStatus(200);
-    //         //Delay 45 seconds if it is a new alert
-    //         timer(45000).then(_=>
-    //             sendZabbixItem(host,itemKey,alertMessage,function respose(result){
-    //             })
-    //         );
-    //     }else{
-    //         sendZabbixItem(host,itemKey,alertMessage,function respose(result){
-    //             res.json(result);
-    //         });
-    //     }
-    // });
-});
-
-const timer = ms => new Promise( res => setTimeout(res, ms));
-
-//kate's amendment
-function checkAlertType(alertSchemaId){
-    if (alertSchemaId == 'Microsoft.Insights/activityLogs'){
-        return handleResourceHealthAlert();
-    }
-    else if (alertSchemaId == 'AzureMonitorMetricAlert'){
-        return AzureMonitorMetricAlert();
-    }
-    else{
-        console.log('Error - Invalid Alert Type')
-        throw err;
-    }
-};
-
-function AzureMonitorMetricAlert(){
-checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
+/*  checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
         if(!result){            
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
@@ -112,10 +104,17 @@ checkZabbixItem("Azure Resources",host,alertName,itemKey,triggerExpression,prior
             });
         }
     });
-}
-//kate's amendment
+*/    
+});
 
-function checkZabbixItem(hostGroupName,host,itemName,itemKey,triggerExpression,triggerPriority,callback){
+const timer = ms => new Promise( res => setTimeout(res, ms));
+
+//fantszching
+
+    
+//fantszching
+
+function checkZabbixItemMetric(hostGroupName,host,itemName,itemKey,triggerExpression,triggerPriority,callback){
     userLogin(zabbixAccount,zabbixPassword,function(authToken){
         checkHostGroup(authToken,hostGroupName,function(hostGroupId){
             checkHost(authToken,host,hostGroupId,function(hostId){
