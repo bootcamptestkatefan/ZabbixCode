@@ -18,7 +18,7 @@ const zabbixServerAPIUrl ='http://'+zabberServer+'/zabbix/api_jsonrpc.php';
                             2.2.2) Return the value return by the callback function
 */
 function checkHostGroup(authToken,hostGroupName,callback){
-    console.log('1');
+    console.log('Checking Host Group...');
     getHostGroupByName(authToken,hostGroupName,function(result){
         if(result[0]==null){
             createHostGroup(authToken,hostGroupName,function(result){
@@ -26,7 +26,7 @@ function checkHostGroup(authToken,hostGroupName,callback){
                 return callback(result.groupids[0]);
             });
         }else{
-            console.log('Group ID get!');
+            console.log("Host group get, with groupID "+result[0].groupid);
             return callback(result[0].groupid);
         }
     });
@@ -44,7 +44,7 @@ function checkHostGroup(authToken,hostGroupName,callback){
                             2.2.2) Return the value return by the callback function
 */
 function checkHost(authToken,host,hostGroupId,callback){
-    console.log('2');
+    console.log('Checking Host...');
     getHostByName(authToken,host,function(result){
         if(result[0]==null){
             createHost(authToken,host,hostGroupId,function(result){
@@ -52,7 +52,7 @@ function checkHost(authToken,host,hostGroupId,callback){
                 return callback(result.hostids[0]);
             });
         }else{
-            console.log("Host ID get!");
+            console.log("Host get, with hostID "+result[0].hostid);
             return callback(result[0].hostid)
         }
     });
@@ -70,7 +70,7 @@ function checkHost(authToken,host,hostGroupId,callback){
                             2.2.2) Return the value return by the callback function
 */
 function checkItem(authToken,hostId,itemName,itemKey,callback){
-    console.log('3');
+    console.log('Checking Item...');
     var params = {
         "output":["key_"],
         "filter":{
@@ -95,17 +95,16 @@ function checkItem(authToken,hostId,itemName,itemKey,callback){
                     2) After API call is completed, return true/false returned by the callback function
 */
 function checkTrigger(authToken,triggerDescription,triggerExpression,priority,callback){
-    console.log('4');
+    console.log('Checking Trigger...');
     createTrigger(authToken,triggerDescription,triggerExpression,priority,function(result){
-        console.log('4.1');
         if(result==null) // means new trigger cannot be made
             {
-                console.log('No permission for making Trigger, return true');
+                console.log('No need to create new trigger, return true');
                 return callback(true);
             }
         else// means new trigger can be made
         {
-            console.log('Trigger can be made, return false');
+            console.log('New trigger is made, return false');
             return callback(false);
         }
     });
@@ -116,16 +115,14 @@ function checkTrigger(authToken,triggerDescription,triggerExpression,priority,ca
                     2) After API call is completed, return the value returned by the callback function
 */
 function createTrigger(authToken,triggerDescription,triggerExpression,priority,callback){
-    console.log('5');
+    console.log('Checking whether there is need to create new Trigger...');
     var params = {
         "description":triggerDescription,
         "expression": triggerExpression,
         "priority": priority
     }
-    console.log('5.1');
     callZabbixAPI(authToken,"trigger.create",params,function(result){
-        // console.log(result);
-        console.log('Creating Trigger');
+        console.log('Checking in progress...');
         return callback(result);
     });
 }
@@ -135,7 +132,7 @@ function createTrigger(authToken,triggerDescription,triggerExpression,priority,c
                     2) After API call is completed, return the value returned by the callback function
 */
 function createItem(authToken,hostId,itemName,itemKey,callback){
-    console.log('0');
+    console.log('Creating New item...');
     var params = {
         "name":itemName,
         "key_":itemKey,
@@ -144,7 +141,6 @@ function createItem(authToken,hostId,itemName,itemKey,callback){
         "value_type":4
     }
     callZabbixAPI(authToken,"item.create",params,function(result){
-        console.log(result);
         return callback(result);
     });
 }
@@ -154,17 +150,25 @@ function createItem(authToken,hostId,itemName,itemKey,callback){
                     2) After send is completed, call the callback function with result
 */
 function sendZabbixItem(zabbixHost,zabbixItemKey,message,callback){
-    console.log('6');
+    console.log('Sending Zabbix Item...');
+    console.log('Below information are going to be sent.')
+    console.log(' ');
     var dest = zabberServer;
-    var Sender = new ZabbixSender({host: dest}); 
+    var Sender = new ZabbixSender({host: dest});
+    console.log('zabbixHost:                '+zabbixHost);
+    console.log('zabbixItemKey:             '+zabbixItemKey);
+    console.log('message:                   '+message);
+    console.log(' ');
     Sender.addItem(zabbixHost,zabbixItemKey,message);
     Sender.send(function(err,res){
         if(err){
-            console.log('6.1');
+            console.log('Error is found, please check!');
             throw err;
         }else{
-        console.log(res);
-        callback(res);
+            console.log('information has been sent to Zabbix, please check.')
+            console.log(res);
+            console.log(' ');
+            callback(res);
         }
     })
 }
@@ -174,7 +178,7 @@ function sendZabbixItem(zabbixHost,zabbixItemKey,message,callback){
                     2) After API call is completed, return the value returned by the callback function
 */
 function getHostGroupByName(authToken,name,callback){
-    console.log('7');
+    console.log('Getting Host group by name');
     var params = {
         "filter": {
             "name": name
@@ -184,7 +188,7 @@ function getHostGroupByName(authToken,name,callback){
         ]
     };
     callZabbixAPI(authToken,"hostgroup.get",params,function(result){
-        console.log('Can get host group by name with result '+result);
+        console.log('Host group can be got by name with result: '+result);
         return callback(result);
     });
 }
@@ -194,12 +198,11 @@ function getHostGroupByName(authToken,name,callback){
                     2) After API call is completed, return the value returned by the callback function
 */
 function createHostGroup(authToken,name,callback){
-    console.log('8');
+    console.log('Creating New host Group...');
     var params = {
         "name": name
     };
     callZabbixAPI(authToken,"hostgroup.create",params,function(result){
-        console.log('8.1');
         return callback(result);
     });
 }
@@ -209,7 +212,7 @@ function createHostGroup(authToken,name,callback){
                     2) After API call is completed, return the value returned by the callback function
 */
 function createHost(authToken,hostName,hostGroupId,callback){
-    console.log('9');
+    console.log('Creating Host...');
     var params = {
         "host": hostName,
         "interfaces":[
@@ -225,7 +228,6 @@ function createHost(authToken,hostName,hostGroupId,callback){
         "groups":[{"groupid":hostGroupId}]
     }
     callZabbixAPI(authToken,"host.create",params,function(result){
-        console.log('9.1');
         return callback(result);
     });
 }
@@ -235,7 +237,7 @@ function createHost(authToken,hostName,hostGroupId,callback){
                     2) After API call is completed, return the value returned by the callback function
 */
 function getHostByName(authToken,host,callback){
-    console.log('10');
+    console.log('Getting Host By name...');
     var params = {
         "filter": {
             "host": host
@@ -245,7 +247,7 @@ function getHostByName(authToken,host,callback){
         ]
     };
     callZabbixAPI(authToken,"host.get",params,function(result){
-        console.log('Can get host by name with hostId '+result);
+        console.log('Host can be got by name with hostId '+result);
         return callback(result);
     });
 }
@@ -255,13 +257,13 @@ function getHostByName(authToken,host,callback){
                     2) After API call is completed, return the value returned by the callback function
 */
 function userLogin(account,password,callback){
-    console.log('11');
+    console.log('Logining In...');
     const params = {
         "user": account,
         "password": password
     };
     callZabbixAPI(null,"user.login",params,function(result){
-        console.log('Can login');
+        console.log('Log-In successfully!');
         return callback(result);
     });
 }
@@ -270,12 +272,12 @@ function userLogin(account,password,callback){
     Detail      :   1) Logout from Zabbix by calling Zabbix API through generic function callZabbixAPI
 */
 function userLogout(authToken){
-    console.log('12');
+    console.log('Logining Out...');
     callZabbixAPI(authToken,"user.logout",[],function(result){
         if(!result){
-            console.log("Logout Error");
+            console.log("Logout Error!");
         }
-        console.log("Can logout!");
+        console.log("Logout-out successfully!");
     });
 }
 
@@ -285,7 +287,7 @@ function userLogout(authToken){
                     2) 2) If calling Zabbix API is successful, call callback function (with result) which is passed into this function
 */
 function callZabbixAPI(authToken,method,params,callback){
-    console.log('13');
+    console.log('In progress...');
     var apiRequestJson={
         "jsonrpc": "2.0",
         "method": method,
@@ -298,10 +300,10 @@ function callZabbixAPI(authToken,method,params,callback){
         { json: apiRequestJson},
         function (error, response, body) {
             if (!error && response.statusCode == 200) {
-                console.log('called API');
+                console.log('API can be called');
                 return callback(body.result);
             }
-            console.log("can't call API");
+            console.log("Failed to call the API");
         }
     );
 }

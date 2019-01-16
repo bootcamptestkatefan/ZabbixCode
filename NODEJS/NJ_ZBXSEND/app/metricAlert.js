@@ -1,6 +1,6 @@
 'use strict'
 var crypto = require('crypto');
-var util = require('./util/zabbicApiUtil');
+var util = require('./util/zabbixApiUtil');
 var config = require('./devconfig/zbxsend-config.json');
 
 const zabbixAccount = config.zabbixAccount;
@@ -48,13 +48,14 @@ function handleAlert(req, res, timer) {
     var metricName = alertMetric.metricName||alertMetric.MetricName;
     var metricOperator = alertMetric.operator||alertMetric.Operator;
     var metricThreshold = alertMetric.threshold||alertMetric.Threshold;
-    var metricValue = alertMetric.metricValue||alertMetric.MetricValue; //whyyyyyyyyy, metricValue not in allof's first item
+    var metricValue = alertMetric.metricValue||alertMetric.MetricValue;
 
-    var hash = crypto.createHash('md5').update(alertId).digest('hex'); //for authentication https://www.dotnetcurry.com/nodejs/1237/digest-authentication-nodejs-application
-    
+    var hash = crypto.createHash('md5').update(alertId).digest('hex'); 
     var host = resourceGroupName+' - '+resourceName;
     var itemKey = "custom.key."+hash;
 
+    const priority = 5-alertSeverity;
+    
     var alertMessage = '['+alertStatus+']['+resourceGroupName+']['
                  + alertName+'][S'+alertSeverity+']['+resourceName+' '+metricName+' '
                  + metricOperator+' '+metricThreshold+', current value: '
@@ -62,12 +63,13 @@ function handleAlert(req, res, timer) {
    
     var triggerExpression = "{"+host+":"+itemKey+".regexp(\\\[S"+alertSeverity+"\\\])}>0 and {"
                             +host+":"+itemKey+".regexp(\\\[Deactivated\\\])}=0";
-    const priority = 5-alertSeverity;
+
 
 
     checkZabbixItemMetric("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
         if(!result){ //new trigger can be made            
             console.log('New trigger is made');
+            console.log('Please wait for 45s to make the trigger-making');
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
             timer(45000).then(_=>
@@ -81,6 +83,36 @@ function handleAlert(req, res, timer) {
             });                                
         }
     });
+
+    console.log(' ');
+    console.log('Print Parameter');
+    console.log('****************************************************************');
+    console.log('alertData:         ' + alertData);
+    console.log('alertStatus:       ' + alertStatus);
+    console.log('alertContext:      ' + alertContext);
+    console.log('alertTimeStamp:    ' + alertTimeStamp);
+    console.log('alertCondition:    ' + alertCondition);
+    console.log('alertCondition:    ' + alertCondition);
+    console.log('alertId:           ' + alertId);
+    console.log('resourceGroupName: ' + resourceGroupName);
+    console.log('resourceName:      ' + resourceName);
+    console.log('alertName:         ' + alertName);
+    console.log('alertSeverity:     ' + alertSeverity);
+    console.log('alertMetric:       ' + alertMetric);
+    console.log('metricName:        ' + metricName);
+    console.log('metricOperator:    ' + metricOperator);
+    console.log('metricThreshold:   ' + metricThreshold);
+    console.log('metricValue:       ' + metricValue);
+
+    console.log('hash:              ' + hash);
+    console.log('host:              ' + host);
+    console.log('itemKey:           ' + itemKey);
+    console.log('alertMessage:      ' + alertMessage);
+    console.log('triggerExpression: ' + triggerExpression);
+    console.log('priority:          ' + priority);
+    console.log('****************************************************************');
+    console.log(' ');
+
 }
 
 module.exports = {
