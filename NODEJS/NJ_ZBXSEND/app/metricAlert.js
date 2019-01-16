@@ -1,6 +1,6 @@
 'use strict'
 var crypto = require('crypto');
-var util = require('./util/zabbixApiUtil');
+var util = require('./util/zabbicApiUtil');
 var config = require('./devconfig/zbxsend-config.json');
 
 const zabbixAccount = config.zabbixAccount;
@@ -67,6 +67,7 @@ function handleAlert(req, res, timer) {
 
     checkZabbixItemMetric("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
         if(!result){ //new trigger can be made            
+            console.log('New trigger is made');
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
             timer(45000).then(_=>
@@ -74,6 +75,7 @@ function handleAlert(req, res, timer) {
             })
             );
         }else{ //new trigger cannot be made
+            console.log('No new trigger is made');
             util.sendZabbixItem(host,itemKey,alertMessage,function respose(result){
                 res.json(result);
             });                                

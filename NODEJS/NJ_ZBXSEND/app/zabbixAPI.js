@@ -173,6 +173,34 @@ function getItems(authToken,hostId,customKey,callback){
         }
     );
 }
+// function createTrigger(triggerDescription,triggerExpression,authToken){
+//     console.log('creating trigger . . .');
+//     var apiRequestJson={
+//         "jsonrpc": "2.0",
+//         "method": "trigger.create",
+//         "params": {
+//             "description": triggerDescription,
+//             "expression": triggerExpression,
+//             "dependencies": [
+//                 {
+//                     "triggerid": "14062"
+//                 }
+//             ]
+//         },
+//         "auth": authToken,
+//         "id": 1
+//     };request.post(
+//         zabbixServerAPIUrl,
+//         { json: apiRequestJson},
+//         function (error, response, body) {
+//             if (!error && response.statusCode == 200) {
+//                 console.log(body);
+//                 return callback(body);//sample: { jsonrpc: '2.0', result: { triggerids: [ '14102' ] }, id: 1 }
+//             }
+//         }
+//     );
+
+// }
 function createItem(authToken,hostId,customKey,callback){
     console.log('creating item . . .');
     var apiRequestJson={

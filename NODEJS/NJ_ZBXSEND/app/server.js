@@ -9,6 +9,7 @@ var config = require('./devconfig/zbxsend-config.json');
 
 var metricAlert = require('./metricAlert');
 var resourceHealth = require('./resourceHealth');
+// var forTesting = require('./forTesting');
 
 /* 
     config is getting from "./devconfig/zbxsend-config.json" 
@@ -35,6 +36,7 @@ const timer = ms => new Promise( res => setTimeout(res, ms));
 var handleAlertFunc = [];
 handleAlertFunc['AzureMonitorMetricAlert'] = metricAlert.handleAlert;
 handleAlertFunc['Microsoft.Insights/activityLogs'] = resourceHealth.handleAlert;
+// handleAlertFunc['Microsoft.Insights/activityLogs'] = forTesting.handleAlert;
 
 app.post('/azureMetricAlert',(req,res) => {
     //
@@ -51,4 +53,3 @@ app.post('/azureMetricAlert',(req,res) => {
     }
 
 });
-
