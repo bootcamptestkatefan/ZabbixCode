@@ -48,12 +48,24 @@ function handleAlert(req, res, timer) {
     var alertResourceId = alertActivityLog.resourceId||alertActivityLog.ResourceId;
     var alertResourceGroupName = alertActivityLog.resourceGroupName||alertActivityLog.ResourceGroupName;
     var alertStatus = alertActivityLog.status||alertActivityLog.Status;
-    var alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertCurrentHealthStatus;
+
+    if (alertCurrentHealthStatus == "Unavailable"){
+        // console.log('Unavailable ah');
+        alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertCurrentHealthStatus;
+        // var alertName = "Unavailable";
+    }else if(alertCurrentHealthStatus == "Degraded"){
+        // console.log('Degraded ah');
+        alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertCurrentHealthStatus;
+        // var alertName = "Degraded";
+    }
+    else {
+        var alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertPreviousHealthStatus;
+    }
 
     var alertResourceName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1); //getting the VM name from resourceID
 
 
-    var hash = crypto.createHash('md5').update(alertResourceId).digest('hex'); //for authentication https://www.dotnetcurry.com/nodejs/1237/digest-authentication-nodejs-application
+    var hash = crypto.createHash('md5').update(alertName).digest('hex'); //for authentication https://www.dotnetcurry.com/nodejs/1237/digest-authentication-nodejs-application
     var host = alertResourceGroupName+' - '+alertResourceName;
     var itemKey = "custom.key."+hash;
     
@@ -81,7 +93,7 @@ function handleAlert(req, res, timer) {
             console.log('Please wait for 45s to make the trigger-making');           
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
-            timer(45000).then(_=>
+            timer(10000).then(_=>
                 util.sendZabbixItem(host,itemKey,alertMessage,function respose(result){
             })
             );

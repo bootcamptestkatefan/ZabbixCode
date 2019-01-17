@@ -5,7 +5,7 @@
   <artifactId>NJ_ZBXSEND</artifactId>
   <packaging>pom</packaging>
   <name>NJ_ZBXSEND app</name>
-  <version>1.0.0.007</version>
+  <version>1.0.0.008</version>
   <parent>
 	<groupId>ZBXSEND</groupId>
 	<artifactId>NJ_ZBXSEND_app_and_config</artifactId>

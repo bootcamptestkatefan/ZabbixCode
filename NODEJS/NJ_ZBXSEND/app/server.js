@@ -1,15 +1,13 @@
 'use strict';
 
 var express = require('express');
-//var app = express();
 var app = express().use(express.json());
 
-//var config = require('./config/zbxsend-config.json');
-var config = require('./devconfig/zbxsend-config.json');
 
+var config = require('./devconfig/zbxsend-config.json');
 var metricAlert = require('./metricAlert');
 var resourceHealth = require('./resourceHealth');
-// var forTesting = require('./forTesting');
+
 
 /* 
     config is getting from "./devconfig/zbxsend-config.json" 
@@ -36,7 +34,6 @@ const timer = ms => new Promise( res => setTimeout(res, ms));
 var handleAlertFunc = [];
 handleAlertFunc['AzureMonitorMetricAlert'] = metricAlert.handleAlert;
 handleAlertFunc['Microsoft.Insights/activityLogs'] = resourceHealth.handleAlert;
-// handleAlertFunc['Microsoft.Insights/activityLogs'] = forTesting.handleAlert;
 
 app.post('/azureMetricAlert',(req,res) => {
     //
