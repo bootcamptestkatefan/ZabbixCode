@@ -63,7 +63,7 @@ function handleAlert(req, res, timer) {
 
 
     var hash = crypto.createHash('md5').update(alertName).digest('hex'); //for authentication https://www.dotnetcurry.com/nodejs/1237/digest-authentication-nodejs-application
-    var host = alertResourceGroupName+' - '+alertResourceName;
+    var host = alertResourceGroupName;
     var itemKey = "custom.key."+hash;
     
     var alertSeverity;

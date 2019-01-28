@@ -51,7 +51,7 @@ function handleAlert(req, res, timer) {
     var metricValue = alertMetric.metricValue||alertMetric.MetricValue;
 
     var hash = crypto.createHash('md5').update(alertId).digest('hex'); 
-    var host = resourceGroupName+' - '+resourceName;
+    var host = resourceGroupName;
     var itemKey = "custom.key."+hash;
 
     const priority = 5-alertSeverity;
