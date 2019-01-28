@@ -7,7 +7,7 @@ var app = express().use(express.json());
 var config = require('./devconfig/zbxsend-config.json');
 var metricAlert = require('./metricAlert');
 var resourceHealth = require('./resourceHealth');
-
+var prometheus = require('./prometheus');
 
 /* 
     config is getting from "./devconfig/zbxsend-config.json" 
@@ -32,8 +32,11 @@ app.listen(config.webHookPort,() => console.log('Webhook is listening on port '+
 const timer = ms => new Promise( res => setTimeout(res, ms));
 
 var handleAlertFunc = [];
+var handlePrometheusAlertFuntion = [];
+
 handleAlertFunc['AzureMonitorMetricAlert'] = metricAlert.handleAlert;
 handleAlertFunc['Microsoft.Insights/activityLogs'] = resourceHealth.handleAlert;
+handlePrometheusAlertFuntion['web\\.hook'] = prometheus.handleAlert;
 
 app.post('/azureMetricAlert',(req,res) => {
     //
@@ -41,10 +44,15 @@ app.post('/azureMetricAlert',(req,res) => {
         1. GetSchema ID from request body
         2. 
     */
-    var alertSchemaId = req.body.schemaId;
+    if(req.body.receiver){var alertReceiver = req.body.receiver;}
+    else {var alertSchemaId = req.body.schemaId;}
+
     var func = handleAlertFunc[alertSchemaId];
+    var funct = handlePrometheusAlertFuntion[alertReceiver];
     if (func) {
         func(req, res, timer);
+    } else if(funct){
+        funct(req, res, timer);
     } else {
         console.log('Error - New Alert Type, please find admin for help');
     }

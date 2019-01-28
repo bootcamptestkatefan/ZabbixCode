@@ -49,17 +49,14 @@ function handleAlert(req, res, timer) {
     var alertResourceGroupName = alertActivityLog.resourceGroupName||alertActivityLog.ResourceGroupName;
     var alertStatus = alertActivityLog.status||alertActivityLog.Status;
 
-    if (alertCurrentHealthStatus == "Unavailable"){
-        // console.log('Unavailable ah');
+    var alertName;
+    if (alertCurrentHealthStatus == "Unavailable"){  //set alert name to "(VM name) is now Unavailable"
         alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertCurrentHealthStatus;
-        // var alertName = "Unavailable";
-    }else if(alertCurrentHealthStatus == "Degraded"){
-        // console.log('Degraded ah');
+    }else if(alertCurrentHealthStatus == "Degraded"){  //set alert name to "(VM name) is now Degraded"
         alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertCurrentHealthStatus;
-        // var alertName = "Degraded";
     }
-    else {
-        var alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertPreviousHealthStatus;
+    else { //set alert name to "(VM name) is now Available"
+        alertName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1)+" is now "+alertPreviousHealthStatus;
     }
 
     var alertResourceName = alertResourceId.substring(alertResourceId.lastIndexOf('/')+1); //getting the VM name from resourceID
@@ -93,7 +90,7 @@ function handleAlert(req, res, timer) {
             console.log('Please wait for 45s to make the trigger-making');           
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
-            timer(10000).then(_=>
+            timer(45000).then(_=>
                 util.sendZabbixItem(host,itemKey,alertMessage,function respose(result){
             })
             );
