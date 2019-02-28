@@ -1,10 +1,10 @@
-'use strict'
 var request = require('request');
 var ZabbixSender = require('node-zabbix-sender');
 var config = require('../devconfig/zbxsend-config.json');
 
 const zabberServer = config.zabbixServerUrl;
 const zabbixServerAPIUrl ='http://'+zabberServer+'/zabbix/api_jsonrpc.php';
+
 
 /*
     Detail      :   1) Get host group (by name) from Zabbix through by calling Zabbix API through generic function callZabbixAPI
@@ -94,39 +94,100 @@ function checkItem(authToken,hostId,itemName,itemKey,callback){
     Detail      :   1) Check trigger exists by trying to create trigger on Zabbix?
                     2) After API call is completed, return true/false returned by the callback function
 */
-function checkTrigger(authToken,triggerDescription,triggerExpression,priority,callback){
-    console.log('Checking Trigger...');
-    createTrigger(authToken,triggerDescription,triggerExpression,priority,function(result){
+/*
+function checkTrigger(host,itemKey,authToken,triggerExpression,priority,callback){
+    // console.log('Checking Trigger...');
+    createOneTrigger(host,itemKey,authToken,triggerExpression,priority,function(result){
         if(result==null) // means new trigger cannot be made
             {
-                console.log('No need to create new trigger, return true');
+                // console.log('No need to create new trigger, return true');
                 return callback(true);
             }
         else// means new trigger can be made
         {
-            console.log('New trigger is made, return false');
+            for (var severity=1;severity<=5;severity++){
+            var newSeverity = 5 - severity;
+            var FiveExpression="{"+host+":"+itemKey+".regexp(\\\[S"+newSeverity+"\\\])}>0 and {"+host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0"
+            createFiveTrigger(authToken,FiveExpression,severity);
+            }
+            // console.log('Five New trigger is made, return false');
             return callback(false);
         }
     });
 }
-
-/*
-    Detail      :   1) Create trigger on Zabbix by calling Zabbix API through generic function callZabbixAPI
-                    2) After API call is completed, return the value returned by the callback function
 */
-function createTrigger(authToken,triggerDescription,triggerExpression,priority,callback){
-    console.log('Checking whether there is need to create new Trigger...');
+function checkTrigger(host, itemKey, authToken, triggerExpression, priority, callback){
+    // console.log('Checking Trigger...');
+    
+
+    createTrigger(authToken, triggerExpression, priority, function(result){
+        if(result==null) // means new trigger cannot be made
+        {
+            // console.log('No need to create new trigger, return true');
+            return callback(true);
+        }
+        else
+        {
+            for (var severity=1; severity<=5; severity++){
+                var newSeverity = 6 - severity;
+                var FiveExpression="{"+host+":"+itemKey+".regexp(\\\[S"+newSeverity+"\\\])}>0 and {"+host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0"
+                createTrigger(authToken, FiveExpression, severity, function(result) {
+                    
+                });
+            }
+            // console.log('Five New trigger is made, return false');
+            return callback(false); 
+        }
+    });
+}
+
+function createTrigger(authToken, triggerExpression, priority, callback){
+    // console.log('Checking whether there is need to create new Trigger...');
+    console.log(triggerExpression);
     var params = {
-        "description":triggerDescription,
+        "description": '{{ITEM.VALUE}.regsub("(.*)", " \\1")}',
         "expression": triggerExpression,
         "priority": priority
     }
     callZabbixAPI(authToken,"trigger.create",params,function(result){
-        console.log('Checking in progress...');
+        // console.log('Checking in progress...');
         return callback(result);
     });
 }
-
+/*
+function createFiveTrigger(authToken,FiveExpression,severity){
+    // console.log('Checking whether there is need to create five Trigger...');
+    console.log(FiveExpression);
+    var params = {
+        //"description": '{{ITEM.VALUE}.regsub("^\[.*", " \1 \2")}',
+        "description": '{{ITEM.VALUE}.regsub("^([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+)", " \2_\3")}',
+        "expression": FiveExpression,
+        "priority": severity //for color of the alert
+    }
+    callZabbixAPI(authToken,"trigger.create",params,function(){
+        // console.log('Checking in progress...');
+    });
+}
+*/
+/*
+    Detail      :   1) Create trigger on Zabbix by calling Zabbix API through generic function callZabbixAPI
+                    2) After API call is completed, return the value returned by the callback function
+*/
+/*
+function createOneTrigger(host,itemKey,authToken,triggerExpression,priority,callback){
+    // console.log('Checking whether there is need to create new Trigger...');
+    console.log(triggerExpression);
+    var params = {
+        "description": '{{ITEM.VALUE}.regexp("^([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+) ([\[A-Za-z0-9\],:.]+)", " \2_\3")}',
+        "expression": triggerExpression,
+        "priority": priority
+    }
+    callZabbixAPI(authToken,"trigger.create",params,function(result){
+        // console.log('Checking in progress...');
+        return callback(result);
+    });
+}
+*/
 /*
     Detail      :   1) Create item on Zabbix by calling Zabbix API through generic function callZabbixAPI
                     2) After API call is completed, return the value returned by the callback function
@@ -263,8 +324,8 @@ function userLogin(account,password,callback){
         "password": password
     };
     callZabbixAPI(null,"user.login",params,function(result){
-        console.log('Log-In successfully!');
         return callback(result);
+        console.log('Log-In successfully!');
     });
 }
 
@@ -316,6 +377,7 @@ module.exports = {
     checkItem,
     checkTrigger,
     createTrigger,
+    //createOneTrigger,
     sendZabbixItem,
     getHostGroupByName,
     createHostGroup,

@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express');
+var actuator = require('express-actuator');
 var app = express().use(express.json());
 
 
@@ -8,6 +9,7 @@ var config = require('./devconfig/zbxsend-config.json');
 var metricAlert = require('./metricAlert');
 var resourceHealth = require('./resourceHealth');
 var prometheus = require('./prometheus');
+// var forTesting = require('./forTesting');
 
 /* 
     config is getting from "./devconfig/zbxsend-config.json" 
@@ -31,12 +33,15 @@ app.listen(config.webHookPort,() => console.log('Webhook is listening on port '+
 
 const timer = ms => new Promise( res => setTimeout(res, ms));
 
-var handleAlertFunc = [];
-var handlePrometheusAlertFuntion = [];
+var handleAzureAlertFunction = [];
+var handlePrometheusAlertFunction = [];
 
-handleAlertFunc['AzureMonitorMetricAlert'] = metricAlert.handleAlert;
-handleAlertFunc['Microsoft.Insights/activityLogs'] = resourceHealth.handleAlert;
-handlePrometheusAlertFuntion['web\\.hook'] = prometheus.handleAlert;
+handleAzureAlertFunction['AzureMonitorMetricAlert'] = metricAlert.handleAlert;
+handleAzureAlertFunction['Microsoft.Insights/activityLogs'] = resourceHealth.handleAlert;
+handlePrometheusAlertFunction['web\\.hook'] = prometheus.handleAlert;
+// handleAzureAlertFunction['Microsoft.Insights/activityLogs'] = forTesting.handleAlert;
+
+app.use(actuator('/azureMetricAlert'));
 
 app.post('/azureMetricAlert',(req,res) => {
     //
@@ -47,12 +52,12 @@ app.post('/azureMetricAlert',(req,res) => {
     if(req.body.receiver){var alertReceiver = req.body.receiver;}
     else {var alertSchemaId = req.body.schemaId;}
 
-    var func = handleAlertFunc[alertSchemaId];
-    var funct = handlePrometheusAlertFuntion[alertReceiver];
-    if (func) {
-        func(req, res, timer);
-    } else if(funct){
-        funct(req, res, timer);
+    var azureFunction = handleAzureAlertFunction[alertSchemaId];
+    var prometheusFunction = handlePrometheusAlertFunction[alertReceiver];
+    if (azureFunction) {
+        azureFunction(req, res, timer);
+    } else if(prometheusFunction){
+        prometheusFunction(req, res, timer);
     } else {
         console.log('Error - New Alert Type, please find admin for help');
     }

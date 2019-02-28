@@ -1,11 +1,12 @@
 {
   "name": "njzbxsend",
   "version": "1.0.0",
-  "description": "impletments zabbix_sender in js",
+  "description": "implements zabbix_sender in js",
   "main": "server.js",
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
+    "express-actuator": "^1.1.0",
     "express-session": "^1.15.6",
     "node-zabbix-sender": "^1.1.0",
     "request": "^2.88.0"

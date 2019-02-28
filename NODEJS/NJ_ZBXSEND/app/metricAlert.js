@@ -20,7 +20,7 @@ function checkZabbixItemMetric(hostGroupName,host,itemName,itemKey,triggerExpres
         util.checkHostGroup(authToken,hostGroupName,function(hostGroupId){
             util.checkHost(authToken,host,hostGroupId,function(hostId){
                 util.checkItem(authToken,hostId,itemName,itemKey,function(itemId){
-                    util.checkTrigger(authToken,itemName,triggerExpression,triggerPriority,function(result){
+                    util.checkTrigger(host,itemKey,authToken,triggerExpression,triggerPriority,function(result){
                         util.userLogout(authToken);
                         return callback(result);
                     });
@@ -32,44 +32,50 @@ function checkZabbixItemMetric(hostGroupName,host,itemName,itemKey,triggerExpres
 
 function handleAlert(req, res, timer) {
     var alertData = req.body.data;
-    var alertStatus = alertData.status||alertData.Status;
     var alertContext = alertData.context||alertData.Context;
-    var alertTimeStamp = alertContext.timestamp||alertContext.Timestamp;
     var alertCondition = alertContext.condition||alertContext.Condition;
-    alertCondition = alertCondition.AllOf||alertCondition.allOf;
-    var alertId = alertContext.id||alertContext.Id;
-
+    var alertAllOf = alertCondition.AllOf||alertCondition.allOf;
+    var alertMetric = alertAllOf[0];
     var resourceGroupName = alertContext.resourceGroupName||alertContext.ResourceGroupName;
     var resourceName = alertContext.resourceName||alertContext.ResourceName;
-    var alertName = alertContext.name||alertContext.Name;
-    var alertSeverity = alertContext.severity||alertContext.Severity;
-    var alertMetric = alertCondition[0]; //allof have two items
-
+    // var alertSeverity = alertContext.severity||alertContext.Severity;
+    var alertLevel = alertContext.severity||alertContext.Severity;
     var metricName = alertMetric.metricName||alertMetric.MetricName;
     var metricOperator = alertMetric.operator||alertMetric.Operator;
     var metricThreshold = alertMetric.threshold||alertMetric.Threshold;
     var metricValue = alertMetric.metricValue||alertMetric.MetricValue;
 
-    var hash = crypto.createHash('md5').update(alertId).digest('hex'); 
+    var status = alertData.status||alertData.Status;
+    var alertStatus;
+    if(status == 'Activated'){ alertStatus = 'Active'; }
+    else{ alertStatus = 'Resolved';}
+
+    var itemName = resourceName+' '+metricName+' '+ metricOperator+' '+metricThreshold;
+    var hash = crypto.createHash('md5').update(itemName).digest('hex'); 
     var host = resourceGroupName;
     var itemKey = "custom.key."+hash;
 
-    const priority = 5-alertSeverity;
+    var alertSeverity;
+    if(alertLevel == '4'){ alertSeverity = '5'; }
+    else if(alertLevel == '3'){ alertSeverity = '4'; }
+    else if(alertLevel == '2'){ alertSeverity = '3';  }
+    else if(alertLevel == '1') { alertSeverity = '2'; }
+    else if(alertLevel == '0') { alertSeverity = '1'; }
+    else{ console.log('Error - Invalid severity'); }
+    // const priority = 5-alertSeverity;
+    const priority = 6-alertSeverity;
     
-    var alertMessage = '['+alertStatus+']['+resourceGroupName+']['
-                 + alertName+'][S'+alertSeverity+']['+resourceName+' '+metricName+' '
-                 + metricOperator+' '+metricThreshold+', current value: '
-                 + metricValue+'][Time: '+alertTimeStamp+']';                           //yung lai joe d meh 
-   
+    var alertMessage = '['+alertStatus+']'+resourceName+' '+metricName+' '
+                           + metricOperator+' '+metricThreshold+', current value: '
+                           + metricValue+'[S'+alertSeverity+']';
     var triggerExpression = "{"+host+":"+itemKey+".regexp(\\\[S"+alertSeverity+"\\\])}>0 and {"
-                            +host+":"+itemKey+".regexp(\\\[Deactivated\\\])}=0";
+                               +host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0";
 
 
-
-    checkZabbixItemMetric("Azure Resources",host,alertName,itemKey,triggerExpression,priority,function(result){
-        if(!result){ //new trigger can be made            
+    checkZabbixItemMetric("Pivotal Cloud Foundry",host,itemName,itemKey,triggerExpression,priority,function(result){
+        if(!result){ //new trigger can be made
             console.log('New trigger is made');
-            console.log('Please wait for 45s to make the trigger-making');
+            console.log('Please wait for 45s to make the trigger-making');          
             res.sendStatus(200);
             //Delay 45 seconds if it is a new alert
             timer(45000).then(_=>
@@ -77,7 +83,6 @@ function handleAlert(req, res, timer) {
             })
             );
         }else{ //new trigger cannot be made
-            console.log('No new trigger is made');
             util.sendZabbixItem(host,itemKey,alertMessage,function respose(result){
                 res.json(result);
             });                                
@@ -87,29 +92,32 @@ function handleAlert(req, res, timer) {
     console.log(' ');
     console.log('Print Parameter');
     console.log('****************************************************************');
-    console.log('alertData:         ' + alertData);
-    console.log('alertStatus:       ' + alertStatus);
-    console.log('alertContext:      ' + alertContext);
-    console.log('alertTimeStamp:    ' + alertTimeStamp);
-    console.log('alertCondition:    ' + alertCondition);
-    console.log('alertCondition:    ' + alertCondition);
-    console.log('alertId:           ' + alertId);
-    console.log('resourceGroupName: ' + resourceGroupName);
-    console.log('resourceName:      ' + resourceName);
-    console.log('alertName:         ' + alertName);
-    console.log('alertSeverity:     ' + alertSeverity);
-    console.log('alertMetric:       ' + alertMetric);
-    console.log('metricName:        ' + metricName);
-    console.log('metricOperator:    ' + metricOperator);
-    console.log('metricThreshold:   ' + metricThreshold);
-    console.log('metricValue:       ' + metricValue);
-
-    console.log('hash:              ' + hash);
-    console.log('host:              ' + host);
-    console.log('itemKey:           ' + itemKey);
-    console.log('alertMessage:      ' + alertMessage);
-    console.log('triggerExpression: ' + triggerExpression);
-    console.log('priority:          ' + priority);
+    console.log('alertData:                    ' + alertData);        
+    console.log('alertContext:                 ' + alertContext);         
+    console.log('alertCondition:               ' + alertCondition);           
+    console.log('alertAllOf:                   ' + alertAllOf); 
+    console.log('alertMetric:                  ' + alertMetric);
+    console.log(' ');      
+    console.log('resourceGroupName:            ' + resourceGroupName);              
+    console.log('resourceName:                 ' + resourceName);
+    console.log('alertLevel:                   ' + alertLevel);         
+    console.log('alertSeverity:                ' + alertSeverity);          
+    console.log(' ');               
+    console.log('metricName:                   ' + metricName);       
+    console.log('metricOperator:               ' + metricOperator);           
+    console.log('metricThreshold:              ' + metricThreshold);            
+    console.log('metricValue:                  ' + metricValue);
+    console.log('status:                       ' + status); 
+    console.log(' '); 
+    console.log('alertStatus:                  ' + alertStatus);   
+    console.log('itemName:                     ' + itemName);     
+    console.log('hash:                         ' + hash); 
+    console.log('host:                         ' + host); 
+    console.log('itemKey:                      ' + itemKey);
+    console.log(' ');            
+    console.log('priority:                     ' + priority);     
+    console.log('alertMessage:                 ' + alertMessage);         
+    console.log('triggerExpression:            ' + triggerExpression);  
     console.log('****************************************************************');
     console.log(' ');
 
