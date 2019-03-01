@@ -36,7 +36,6 @@ function handleAlert(req, res, timer) {
     var alertLabels = alertAlerts[0].labels||alertAlerts[0].Labels;
     var alertAnnotations = alertAlerts[0].annotations||alertAlerts[0].Annotations;
     var alertFoundationName = alertLabels.environment;
-    var alertStartsAt = alertAlerts[0].startsAt||alertAlerts[0].StartsAt;
     var alertSummary = alertAnnotations.summary||alertAnnotations.Summary;
     var alertDescription = alertAnnotations.description||alertAnnotations.Description;
     var alertLevel = alertLabels.severity||alertLabels.Severity;
@@ -47,7 +46,7 @@ function handleAlert(req, res, timer) {
     else{ alertStatus = 'Resolved';}
 
     var itemName = alertSummary;
-    var editedItemName = itemName.split("/").slice(3).join("/");
+    // var editedItemName = alertDescription.split("/").slice(3).join("/");
 
     var alertSeverity;
     if(alertLevel == 'indeterminate'){ alertSeverity = '6'; }
@@ -64,7 +63,7 @@ function handleAlert(req, res, timer) {
     var itemHash = crypto.createHash('md5').update(itemName).digest('hex');
     var itemKey = "custom.key."+itemHash;
     
-    var alertMessage = '['+alertStatus+']'+editedItemName+'[S'+alertSeverity+']'; 
+    var alertMessage = '['+alertStatus+']'+alertDescription+'[S'+alertSeverity+']'; 
     var triggerExpression = "{"+host+":"+itemKey+".regexp(\\\[S"+alertSeverity+"\\\])}>0 and {"
                             +host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0";
 
@@ -94,8 +93,7 @@ function handleAlert(req, res, timer) {
     console.log('alertLabels :                            ' + alertLabels);      
     console.log('alertAnnotations :                       ' + alertAnnotations);
     console.log(' ');
-    console.log('alertFoundationName :                    ' + alertFoundationName);            
-    console.log('alertStartsAt :                          ' + alertStartsAt);        
+    console.log('alertFoundationName :                    ' + alertFoundationName);                    
     console.log('alertSummary :                           ' + alertSummary);       
     console.log('alertDescription :                       ' + alertDescription);           
     console.log('alertLevel :                             ' + alertLevel);     
@@ -103,7 +101,7 @@ function handleAlert(req, res, timer) {
     console.log(' ');                                                 
     console.log('alertStatus :                            ' + alertStatus);       
     console.log('itemName :                               ' + itemName); 
-    console.log('editedItemName :                         ' + editedItemName);
+    // console.log('editedItemName :                         ' + editedItemName);
     console.log(' ');                                               
     console.log('alertSeverity :                          ' + alertSeverity);        
     console.log('alertLevel :                             ' + alertLevel);     

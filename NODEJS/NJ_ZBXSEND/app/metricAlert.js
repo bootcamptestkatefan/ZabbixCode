@@ -65,8 +65,7 @@ function handleAlert(req, res, timer) {
     // const priority = 5-alertSeverity;
     const priority = 6-alertSeverity;
     
-    var alertMessage = '['+alertStatus+']'+resourceName+' '+metricName+' '
-                           + metricOperator+' '+metricThreshold+', current value: '
+    var alertMessage = '['+alertStatus+']'+itemName+', current value: '
                            + metricValue+'[S'+alertSeverity+']';
     var triggerExpression = "{"+host+":"+itemKey+".regexp(\\\[S"+alertSeverity+"\\\])}>0 and {"
                                +host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0";

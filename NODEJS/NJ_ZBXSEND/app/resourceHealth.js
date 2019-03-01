@@ -34,7 +34,6 @@ function handleAlert(req, res, timer) {
     var alertData = req.body.data;
     var alertContext = alertData.context||alertData.Context;
     var alertActivityLog = alertContext.activityLog||alertContext.ActivityLog;
-    var alertEventTimeStamp = alertActivityLog.eventTimestamp||alertActivityLog.eventTimestamp;
     var alertLevel = alertActivityLog.level||alertActivityLog.Level;
     var alertProperties = alertActivityLog.properties||alertActivityLog.Properties;
     var alertCurrentHealthStatus = alertProperties.currentHealthStatus||alertProperties.CurrentHealthStatus;
@@ -71,7 +70,7 @@ function handleAlert(req, res, timer) {
     else{ console.log('Error - Invalid severity'); }
     const priority = 6-alertSeverity;
     
-    var alertMessage = '['+alertStatus+']'+itemName+'! Current health status: '+alertCurrentHealthStatus+'[S'+alertSeverity+']';
+    var alertMessage = '['+alertStatus+']'+itemName+'![S'+alertSeverity+']';
               
     var triggerExpression = "{"+host+":"+itemKey+".regexp(\\\[S"+alertSeverity+"\\\])}>0 and {"
                             +host+":"+itemKey+".regexp(\\\[Resolved\\\])}=0";
@@ -98,8 +97,7 @@ function handleAlert(req, res, timer) {
     console.log('****************************************************************');
     console.log('alertData                                    ' + alertData);      
     console.log('alertContext                                 ' + alertContext);         
-    console.log('alertActivityLog                             ' + alertActivityLog);             
-    console.log('alertEventTimeStamp                          ' + alertEventTimeStamp);                
+    console.log('alertActivityLog                             ' + alertActivityLog);                             
     console.log('alertLevel                                   ' + alertLevel);       
     console.log('alertProperties                              ' + alertProperties); 
         console.log(' ');           
